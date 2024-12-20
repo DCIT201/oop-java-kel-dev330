@@ -1,0 +1,241 @@
+
+
+import java.util.*;
+
+// Abstraction: Abstract base class
+
+public abstract class Vehicle {
+    // Encapsulation: Private fields
+    private String vehicleId;
+    private String model;
+    private double baseRentalRate;
+    private boolean isAvailable;
+
+    // Constructor with validation
+    public Vehicle(String vehicleId, String model, double baseRentalRate) {
+        this.vehicleId = vehicleId;
+        this.model = model;
+        this.baseRentalRate = baseRentalRate;
+        this.isAvailable = true;
+    }
+
+    // Public getters and setters for controlled access
+    public String getVehicleId() {
+        return vehicleId;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public double getBaseRentalRate() {
+        return baseRentalRate;
+    }
+
+    public void setAvailable(boolean available) {
+        isAvailable = available;
+    }
+
+    // Abstract methods 
+    public abstract double calculateRentalCost(int days);
+
+    public abstract boolean isAvailableForRental();
+}
+
+// Inheritance: Concrete Vehicle classes
+
+class Car extends Vehicle {
+    private static final double INSURANCE_FEE = 15.0;
+
+    public Car(String vehicleId, String model, double baseRentalRate) {
+        super(vehicleId, model, baseRentalRate);
+    }
+
+    @Override
+    public double calculateRentalCost(int days) {
+        return (getBaseRentalRate() * days) + INSURANCE_FEE;
+    }
+
+    @Override
+    public boolean isAvailableForRental() {
+        return isAvailable();
+    }
+}
+
+
+class Motorcycle extends Vehicle {
+    private static final double HELMET_FEE = 5.0;
+
+    public Motorcycle(String vehicleId, String model, double baseRentalRate) {
+        super(vehicleId, model, baseRentalRate);
+    }
+
+    @Override
+    public double calculateRentalCost(int days) {
+        return (getBaseRentalRate() * days) + HELMET_FEE;
+    }
+
+    @Override
+    public boolean isAvailableForRental() {
+        return isAvailable();
+    }
+}
+
+
+class Truck extends Vehicle {
+    private static final double LOAD_SURCHARGE = 50.0;
+
+    public Truck(String vehicleId, String model, double baseRentalRate) {
+        super(vehicleId, model, baseRentalRate);
+    }
+
+    @Override
+    public double calculateRentalCost(int days) {
+        return (getBaseRentalRate() * days) + LOAD_SURCHARGE;
+    }
+
+    @Override
+    public boolean isAvailableForRental() {
+        return isAvailable();
+    }
+}
+
+
+class Customer {
+    private String customerId;
+    private String name;
+    private List<String> rentalHistory;
+    private int currentRentals;
+
+    public Customer(String customerId, String name) {
+        this.customerId = customerId;
+        this.name = name;
+        this.rentalHistory = new ArrayList<>();
+        this.currentRentals = 0;
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void addRentalHistory(String vehicleId) {
+        rentalHistory.add(vehicleId);
+    }
+
+    public List<String> getRentalHistory() {
+        return rentalHistory;
+    }
+
+    public boolean canRentMoreVehicles() {
+        return currentRentals < 2;
+    }
+
+    public void rentVehicle() {
+        currentRentals++;
+    }
+
+    public void returnVehicle() {
+        currentRentals--;
+    }
+}
+
+
+class RentalTransaction {
+    private String transactionId;
+    private Customer customer;
+    private Vehicle vehicle;
+    private int rentalDays;
+    private double totalCost;
+
+    public RentalTransaction(String transactionId, Customer customer, Vehicle vehicle, int rentalDays) {
+        this.transactionId = transactionId;
+        this.customer = customer;
+        this.vehicle = vehicle;
+        this.rentalDays = rentalDays;
+        this.totalCost = vehicle.calculateRentalCost(rentalDays);
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public int getRentalDays() {
+        return rentalDays;
+    }
+
+    public double getTotalCost() {
+        return totalCost;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionID: " + transactionId + ", Customer: " + customer.getName() + ", Vehicle: " + vehicle.getModel() + ", Days: " + rentalDays + ", Cost: " + totalCost;
+    }
+}
+
+/
+class RentalAgency {
+    private List<Vehicle> fleet;
+    private List<RentalTransaction> transactions;
+
+    public RentalAgency() {
+        this.fleet = new ArrayList<>();
+        this.transactions = new ArrayList<>();
+    }
+
+    public void addVehicle(Vehicle vehicle) {
+        fleet.add(vehicle);
+    }
+
+    public Vehicle findAvailableVehicle(String model) {
+        for (Vehicle vehicle : fleet) {
+            if (vehicle.getModel().equalsIgnoreCase(model) && vehicle.isAvailableForRental()) {
+                return vehicle;
+            }
+        }
+        return null;
+    }
+
+    public RentalTransaction rentVehicle(Customer customer, String model, int days) throws Exception {
+        if (!customer.canRentMoreVehicles()) {
+            throw new Exception("Customer has reached the rental limit.");
+        }
+        Vehicle vehicle = findAvailableVehicle(model);
+        if (vehicle == null) {
+            throw new Exception("Vehicle not available.");
+        }
+        vehicle.setAvailable(false);
+        customer.rentVehicle();
+        RentalTransaction transaction = new RentalTransaction(UUID.randomUUID().toString(), customer, vehicle, days);
+        transactions.add(transaction);
+        return transaction;
+    }
+
+    public void returnVehicle(Customer customer, Vehicle vehicle) {
+        vehicle.setAvailable(true);
+        customer.returnVehicle();
+    }
+
+    public List<RentalTransaction> getTransactions() {
+        return transactions;
+    }
+
+    public void generateReport() {
+        for (RentalTransaction transaction : transactions) {
+            System.out.println(transaction);
+        }
+    }
+}
+
